@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HabboLiso</title>
+<style>
+body {font-family: Arial, sans-serif; margin:0; padding:10px; max-width:1200px; margin-left:auto; margin-right:auto; background-color:#f5f5f5;}
+h1,h2{text-align:center;}
+button{border:none;border-radius:4px;padding:5px 10px;cursor:pointer;background:#007bff;color:white;transition:.2s;}
+button:hover{background:#0056b3;}
+#search{width:100%; max-width:400px; padding:8px; margin:auto; display:block; border-radius:6px; border:1px solid #ccc;}
+.container{display:grid; gap:15px; margin:15px 0;}
+.item-card{background:white; padding:10px; border-radius:8px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.1); position:relative; transition:.2s;}
+.item-card:hover{transform:translateY(-3px);}
+.item-card img{width:100%; border-radius:6px; cursor:pointer; transition:border .2s;}
+.item-card img.selected{border:2px solid blue;}
+.favorite-btn{position:absolute; top:5px; right:5px; background:transparent; font-size:20px; cursor:pointer;}
+.list-mode .container{display:block;}
+.list-mode .item-card{display:flex; align-items:center; gap:15px;}
+.list-mode .item-card img{width:80px;}
+.list-mode .item-card .btns{flex-direction:column; margin-left:auto;}
+#editor-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:10px; margin-bottom:15px;}
+#editor-summary{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+#editor-filters{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:10px;}
+#editor-filters button.active{background:#28a745;}
+#wishlist-items{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:15px;}
+#popular-items{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:15px; margin-top:30px;}
+.suggestion-list{position:absolute; background:white; border:1px solid #ccc; width:100%; max-width:400px; z-index:1000; border-radius:4px;}
+.suggestion-list div{padding:5px; cursor:pointer;}
+.suggestion-list div:hover{background:#f0f0f0;}
+@media(max-width:768px){.list-mode .item-card{flex-direction:column;}.list-mode .item-card .btns{flex-direction:row;margin-left:0;gap:5px;}}
+</style>
+</head>
+<body>
+
+<h1>HabboLiso</h1>
+
+<!-- Busca -->
+<div style="position:relative;">
+<input type="text" id="search" placeholder="Buscar itens...">
+<div id="suggestions" class="suggestion-list" style="display:none;"></div>
+</div>
+
+<!-- Modo lista/grade -->
+<div style="text-align:center; margin:10px 0;">
+<button id="gridBtn">Grade</button>
+<button id="listBtn">Lista</button>
+</div>
+
+<!-- Catálogo -->
+<div id="items-container" class="container"></div>
+
+<!-- Itens populares -->
+<h2>🔥 Itens Populares</h2>
+<div id="popular-items"></div>
+
+<!-- Editor de visuais -->
+<section id="editor">
+<h2>🎨 Editor de Visuais</h2>
+<div id="editor-filters">
+<button data-category="Todos" class="active">Todos</button>
+<button data-category="Cabelo">Cabelo</button>
+<button data-category="Penteados">Penteados</button>
+<button data-category="Chapéu">Chapéu</button>
+<button data-category="Óculos">Óculos</button>
+<button data-category="Camisas">Camisas</button>
+<button data-category="Calças">Calças</button>
+<button data-category="Sapatos">Sapatos</button>
+<button data-category="Acessórios">Acessórios</button>
+</div>
+<div id="editor-grid"></div>
+<div id="editor-summary">
+<p>Valor total: R$<span id="total-price">0</span></p>
+<button id="buy-all">Comprar todos via WhatsApp</button>
+</div>
+</section>
+
+<!-- Lista de desejos -->
+<section id="wishlist">
+<h2>💖 Lista de Desejos</h2>
+<div id="wishlist-items"></div>
+</section>
+
+<script>
+let items=[],favorites=JSON.parse(localStorage.getItem("favorites")||"[]"),selectedItems=[],currentCategory="Todos";
+const CREDITS_TO_REAL=0.20,WHATSAPP_PHONE="48991139208";
+
+// WhatsApp
+function openWhatsApp(itemName,price){
+const message=Olá! Quero comprar: ${itemName}. Valor: R$${price};
+window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(m
